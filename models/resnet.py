@@ -167,8 +167,8 @@ class ResNetFace(nn.Module):
 		self.bn4 = nn.BatchNorm2d(512)
 		self.dropout = nn.Dropout()
 		#self.fc5 = nn.Linear(512 * 8 * 8, 512)
-		self.fc5 = nn.Linear(224 * 224 * 2, 512)
-		self.bn5 = nn.BatchNorm1d(512)
+		self.fc5 = nn.Linear(224 * 224 * 2, 64)
+		self.bn5 = nn.BatchNorm1d(64)
 
 		for m in self.modules():
 			if isinstance(m, nn.Conv2d):

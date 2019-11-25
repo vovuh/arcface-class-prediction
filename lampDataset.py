@@ -12,6 +12,7 @@ class lampDataset(Dataset):
 		for cpath, dirs, files in os.walk(root_dir):
 			for file in files: self.names.append(os.path.join(cpath, file))
 		self.names = np.random.RandomState(seed=42).permutation(self.names)
+		#self.names = self.names[:int(len(self.names) * 0.1)]
 		if self.mode == 'train':
 			self.file_count = int(len(self.names) * 0.8)
 		else:
@@ -45,7 +46,9 @@ class resizeAndTensor(object):
 		img = self.my_transforms(sample['image'])
 		return {'image': img, 'class': sample['class']}
 
-"""
 dataset = lampDataset(root_dir = os.path.join(os.getcwd(), 'dataset'), transform = resizeAndTensor((224, 224)))
-for i in range(20): print(dataset.names[i])
+for i in range(len(dataset)): dataset[i]
+print(len(dataset.classes))
+"""
+#for i in range(20): print(dataset.names[i])
 """

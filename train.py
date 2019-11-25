@@ -56,7 +56,7 @@ if __name__ == '__main__':
 	if opt.metric == 'add_margin':
 		metric_fc = AddMarginProduct(512, opt.num_classes, s=30, m=0.35)
 	elif opt.metric == 'arc_margin':
-		metric_fc = ArcMarginProduct(512, opt.num_classes, s=30, m=0.5, easy_margin=opt.easy_margin)
+		metric_fc = ArcMarginProduct(64, opt.num_classes, s=30, m=0.7, easy_margin=True)
 	elif opt.metric == 'sphere':
 		metric_fc = SphereProduct(512, opt.num_classes, m=4)
 	else:
@@ -99,6 +99,7 @@ if __name__ == '__main__':
 				output = output.data.cpu().numpy()
 				output = np.argmax(output, axis=1)
 				label = label.data.cpu().numpy()
+				#print(output, label)
 				acc = np.mean((output == label).astype(int))
 				speed = opt.print_freq / (time.time() - start)
 				time_str = time.asctime(time.localtime(time.time()))
