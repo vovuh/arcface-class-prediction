@@ -1,69 +1,93 @@
 import os
-from lampDataset import *
 from torch.utils.data import DataLoader
 
 import torch
 from torch.utils import data
 import torch.nn.functional as F
-from models.focal_loss import *
-from models.metrics import *
-from models.resnet import *
 import torchvision
 from utils import visualizer, view_model
 import torch
 import numpy as np
 import random
 import time
-from config.config import *
 from torch.nn import DataParallel
 from torch.optim.lr_scheduler import StepLR
-from test import *
 from torchvision import transforms
+import torch.optim.lr_scheduler as scheduler
+from sklearn.model_selection import train_test_split
 
-def save_model(model, save_path, name, iter_cnt):
-    save_name = os.path.join(save_path, name + '_' + str(iter_cnt) + '.pth')
-    torch.save(model.state_dict(), save_name)
-    return save_name
+from lamp_dataset import *
+
+from config.config import *
+
+from models.focal_loss import *
+from models.metrics import *
+from models.resnet import *
+from models.newmodel import *
+
+import create_data
+
+def train(device, model, data_loader, optimizer, metric_fc, criterion):
+	print("\nTrain\n")
+	model.train()
+	avg_loss = 0
+	count = 0
+	for ii, data in enumerate(data_loader):
+		data_input, label = data
+		data_input = data_input.to(device)
+		label = label.to(device).long()
+		feature = model.vectorize(data_input)
+		output = metric_fc(feature, label)
+		loss = criterion(output, label)
+		optimizer.zero_grad()
+		loss.backward()
+		optimizer.step()
+		avg_loss += loss.data.item()
+		count += 1
+		if count % 10 == 0:
+			sys.stdout.write("\r{} {} {}".format(count, loss.data.item(), avg_loss / count))
+	print('\nDone train {:}\n'.format(avg_loss / count))
+	
+def validate(device, model, data_loader, metric_fc, criterion):
+	model.to(device)
+	model.train(False)
+
+	avg_loss = 0
+	count = 0
+
+	for data in tqdm(data_loader):
+		data_input, label = data
+		data_input = data_input.to(device)
+		label = label.to(device).long()
+		with torch.set_grad_enabled(False):
+			feature = model(data_input)
+			output = metric_fc(feature, label)
+			loss = criterion(output, label)
+			avg_loss += loss.data.item()
+			count += 1
+
+	return avg_loss / count
+
 
 if __name__ == '__main__':
-	path = os.path.join(os.getcwd(), 'dataset')
+	all_data = create_data.read_data()
+	train_data, val_data = train_test_split(all_data, train_size=0.8, shuffle=True, random_state=42)
+	
+	train_dataset = lamp_dataset(train_data, transform = resizeAndTensor((224, 224)))
+	val_dataset = lamp_dataset(val_data, transform = resizeAndTensor((224, 224)), mode = 'val')
 	
 	opt = Config()
-	if opt.display:
-		visualizer = Visualizer()
+	if opt.display: visualizer = Visualizer()
 	device = torch.device("cuda")
 	
-	train_dataset = lampDataset(root_dir = path, transform = resizeAndTensor((224, 224)))
-	trainloader = DataLoader(train_dataset, batch_size = opt.train_batch_size, shuffle = True, num_workers = opt.num_workers)
+	if opt.loss == 'focal_loss': criterion = FocalLoss(gamma=2)
+	else: criterion = torch.nn.CrossEntropyLoss()
+
+	model = ReSimpleModel(bottleneck_size=opt.bottleneck_size)
+	model.set_gr(False)
 	
-	#identity_list = get_lfw_list(opt.lfw_test_list)
-	#img_paths = [os.path.join(opt.lfw_root, each) for each in identity_list]
-
-	print('{} train iters per epoch:'.format(len(trainloader)))
-
-	if opt.loss == 'focal_loss':
-		criterion = FocalLoss(gamma=2)
-	else:
-		criterion = torch.nn.CrossEntropyLoss()
-
-	if opt.backbone == 'resnet18':
-		model = resnet_face18(use_se=opt.use_se)
-	elif opt.backbone == 'resnet34':
-		model = resnet34()
-	elif opt.backbone == 'resnet50':
-		model = resnet50()
-
-	if opt.metric == 'add_margin':
-		metric_fc = AddMarginProduct(512, opt.num_classes, s=30, m=0.35)
-	elif opt.metric == 'arc_margin':
-		metric_fc = ArcMarginProduct(64, opt.num_classes, s=30, m=0.7, easy_margin=True)
-	elif opt.metric == 'sphere':
-		metric_fc = SphereProduct(512, opt.num_classes, m=4)
-	else:
-		metric_fc = nn.Linear(512, opt.num_classes)
+	metric_fc = ArcMarginProduct(opt.bottleneck_size, opt.num_classes, s=30, m=0.7, easy_margin=True) # first arg =64 ? 
 	
-	#view_model(model, opt.input_shape)
-	#print(model)
 	model.to(device)
 	model = DataParallel(model)
 	metric_fc.to(device)
@@ -75,45 +99,17 @@ if __name__ == '__main__':
 	else:
 		optimizer = torch.optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}],
 									lr=opt.lr, weight_decay=opt.weight_decay)
-	scheduler = StepLR(optimizer, step_size=opt.lr_step, gamma=0.1)
+	
+	scheduler = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
 
 	start = time.time()
 	for i in range(opt.max_epoch):
-		scheduler.step()
-
-		model.train()
-		for ii, data in enumerate(trainloader):
-			data_input, label = data['image'], data['class']
-			data_input = data_input.to(device)
-			label = label.to(device).long()
-			feature = model(data_input)
-			output = metric_fc(feature, label)
-			loss = criterion(output, label)
-			optimizer.zero_grad()
-			loss.backward()
-			optimizer.step()
-
-			iters = i * len(trainloader) + ii
-
-			if iters % opt.print_freq == 0:
-				output = output.data.cpu().numpy()
-				output = np.argmax(output, axis=1)
-				label = label.data.cpu().numpy()
-				#print(output, label)
-				acc = np.mean((output == label).astype(int))
-				speed = opt.print_freq / (time.time() - start)
-				time_str = time.asctime(time.localtime(time.time()))
-				print('{} train epoch {} iter {} {} iters/s loss {} acc {}'.format(time_str, i, ii, speed, loss.item(), acc))
-				if opt.display:
-					visualizer.display_current_results(iters, loss.item(), name='train_loss')
-					visualizer.display_current_results(iters, acc, name='train_acc')
-
-				start = time.time()
-
-		if i % opt.save_interval == 0 or i == opt.max_epoch:
-			save_model(model, opt.checkpoints_path, opt.backbone, i)
+		trainloader = DataLoader(train_dataset, batch_size = opt.train_batch_size, shuffle = True, num_workers = opt.num_workers)
+		valloader = DataLoader(val_dataset, batch_size = opt.test_batch_size, shuffle = False, num_workers = opt.num_workers)
 		
-		model.eval()
-		#acc = lfw_test(model, img_paths, identity_list, opt.lfw_test_list, opt.test_batch_size)
-		#if opt.display:
-		#	visualizer.display_current_results(iters, acc, name='test_acc')
+		train(device, model, trainloader, optimizer, metric_fc, criterion)
+		res = validate(device, model, valloader, metric_fc, criterion)
+		scheduler.step(res)
+		print("Shed step {}".format(res))
+		
+		model.save(os.path.join(cf.PATH_TO_MODEL, 'general_v7_{:}_{:}_{:2f}.h5'.format(BOTTLENECK_SIZE, epoch_num, res)))
