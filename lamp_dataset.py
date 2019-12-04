@@ -2,6 +2,7 @@ import os, numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
+import create_data
 
 class lamp_dataset(Dataset):
 	def __init__(self, data, transform = None, mode = 'train'):
@@ -9,15 +10,6 @@ class lamp_dataset(Dataset):
 		self.mode = mode
 		self.names = data['imgpath'].tolist()
 		self.classes = data['class'].tolist()
-		if mode == 'train':
-			perm = np.random.permutation(len(self.names))
-			newnames = ['' for i in range(len(self.names))]
-			newclasses = [-1 for i in range(len(self.classes))]
-			for i in range(len(self.names)):
-				newnames[i] = self.names[perm[i]]
-				newclasses[i] = self.classes[perm[i]]
-			self.names = newnames
-			self.classes = newclasses
 	
 	def __len__(self):
 		return len(self.names)
@@ -40,7 +32,5 @@ class resizeAndTensor(object):
 		return {'image': img, 'class': sample['class']}
 
 """
-dataset = lampDataset(root_dir = os.path.join(os.getcwd(), 'dataset'), transform = resizeAndTensor((224, 224)))
-for i in range(len(dataset)): dataset[i]
-print(len(dataset.classes))
+dataset = lamp_dataset(create_data.read_data(), transform = resizeAndTensor((224, 224)))
 """

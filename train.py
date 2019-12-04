@@ -28,7 +28,7 @@ from models.newmodel import *
 import create_data
 
 def train(device, model, data_loader, optimizer, metric_fc, criterion):
-	print("\nTrain\n")
+	print('\nTrain\n')
 	model.train()
 	avg_loss = 0
 	count = 0
@@ -45,7 +45,7 @@ def train(device, model, data_loader, optimizer, metric_fc, criterion):
 		avg_loss += loss.data.item()
 		count += 1
 		if count % 10 == 0:
-			sys.stdout.write("\r{} {} {}".format(count, loss.data.item(), avg_loss / count))
+			sys.stdout.write('\r{} {} {}'.format(count, loss.data.item(), avg_loss / count))
 	print('\nDone train {:}\n'.format(avg_loss / count))
 	
 def validate(device, model, data_loader, metric_fc, criterion):
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 	
 	opt = Config()
 	if opt.display: visualizer = Visualizer()
-	device = torch.device("cuda")
+	device = torch.device('cuda')
 	
 	if opt.loss == 'focal_loss': criterion = FocalLoss(gamma=2)
 	else: criterion = torch.nn.CrossEntropyLoss()
@@ -102,7 +102,6 @@ if __name__ == '__main__':
 	
 	scheduler = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
 
-	start = time.time()
 	for i in range(opt.max_epoch):
 		trainloader = DataLoader(train_dataset, batch_size = opt.train_batch_size, shuffle = True, num_workers = opt.num_workers)
 		valloader = DataLoader(val_dataset, batch_size = opt.test_batch_size, shuffle = False, num_workers = opt.num_workers)
@@ -110,6 +109,6 @@ if __name__ == '__main__':
 		train(device, model, trainloader, optimizer, metric_fc, criterion)
 		res = validate(device, model, valloader, metric_fc, criterion)
 		scheduler.step(res)
-		print("Shed step {}".format(res))
+		print('Shed step {}'.format(res))
 		
 		model.save(os.path.join(cf.PATH_TO_MODEL, 'general_v7_{:}_{:}_{:2f}.h5'.format(BOTTLENECK_SIZE, epoch_num, res)))
