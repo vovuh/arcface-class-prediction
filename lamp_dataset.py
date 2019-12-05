@@ -15,10 +15,9 @@ class lamp_dataset(Dataset):
 		return len(self.names)
 	
 	def __getitem__(self, idx):
-		assert idx < len(self.names)
-		sample = {'image': Image.open(self.names[idx]).convert('RGB'), 'class': self.classes[idx]}
-		if self.transform: sample = self.transform(sample)
-		return sample
+		img, label = Image.open(self.names[idx]).convert('RGB'), self.classes[idx]
+		if self.transform: img = self.transform(img)
+		return img, label
 
 class resizeAndTensor(object):
 	def __init__(self, output_size):
@@ -28,8 +27,7 @@ class resizeAndTensor(object):
 		])
 
 	def __call__(self, sample):
-		img = self.my_transforms(sample['image'])
-		return {'image': img, 'class': sample['class']}
+		return self.my_transforms(sample)
 
 """
 dataset = lamp_dataset(create_data.read_data(), transform = resizeAndTensor((224, 224)))

@@ -1,7 +1,9 @@
-import os
+import os, sys
 from torch.utils.data import DataLoader
 
 import torch
+from tqdm import tqdm
+import torch.optim as optim
 from torch.utils import data
 import torch.nn.functional as F
 import torchvision
@@ -20,10 +22,8 @@ from lamp_dataset import *
 
 from config.config import *
 
-from models.focal_loss import *
+from models.model import *
 from models.metrics import *
-from models.resnet import *
-from models.newmodel import *
 
 import create_data
 
@@ -80,8 +80,7 @@ if __name__ == '__main__':
 	if opt.display: visualizer = Visualizer()
 	device = torch.device('cuda')
 	
-	if opt.loss == 'focal_loss': criterion = FocalLoss(gamma=2)
-	else: criterion = torch.nn.CrossEntropyLoss()
+	criterion = torch.nn.CrossEntropyLoss()
 
 	model = ReSimpleModel(bottleneck_size=opt.bottleneck_size)
 	model.set_gr(False)
@@ -89,20 +88,21 @@ if __name__ == '__main__':
 	metric_fc = ArcMarginProduct(opt.bottleneck_size, opt.num_classes, s=30, m=0.7, easy_margin=True) # first arg =64 ? 
 	
 	model.to(device)
-	model = DataParallel(model)
 	metric_fc.to(device)
 	metric_fc = DataParallel(metric_fc)
 
-	if opt.optimizer == 'sgd':
-		optimizer = torch.optim.SGD([{'params': model.parameters()}, {'params': metric_fc.parameters()}],
-									lr=opt.lr, weight_decay=opt.weight_decay)
-	else:
-		optimizer = torch.optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}],
-									lr=opt.lr, weight_decay=opt.weight_decay)
-	
+	optimizer = optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}], lr=0.01,
+									weight_decay=5e-4)
 	scheduler = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
 
 	for i in range(opt.max_epoch):
+		if i == 3:
+			model.set_gr(True)
+			optimizer = optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}], lr=0.01,
+									weight_decay=5e-4)
+			scheduler = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
+
+
 		trainloader = DataLoader(train_dataset, batch_size = opt.train_batch_size, shuffle = True, num_workers = opt.num_workers)
 		valloader = DataLoader(val_dataset, batch_size = opt.test_batch_size, shuffle = False, num_workers = opt.num_workers)
 		
@@ -111,4 +111,4 @@ if __name__ == '__main__':
 		scheduler.step(res)
 		print('Shed step {}'.format(res))
 		
-		model.save(os.path.join(cf.PATH_TO_MODEL, 'general_v7_{:}_{:}_{:2f}.h5'.format(BOTTLENECK_SIZE, epoch_num, res)))
+		model.save(os.path.join(cf.PATH_TO_MODEL, 'general_v7_{:}_{:}_{:2f}.h5'.format(opt.bottleneck_size, epoch_num, res)))
