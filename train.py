@@ -18,12 +18,12 @@ from torchvision import transforms
 import torch.optim.lr_scheduler as scheduler
 from sklearn.model_selection import train_test_split
 
-from lamp_dataset import *
+from lamp_dataset import lamp_dataset, resizeAndTensor
 
-from config.config import *
+from config.config import Config
 
-from models.model import *
-from models.metrics import *
+from models.model import ReSimpleModel
+from models.metrics import ArcMarginProduct
 
 import create_data
 
@@ -89,14 +89,13 @@ if __name__ == '__main__':
 	
 	model.to(device)
 	metric_fc.to(device)
-	metric_fc = DataParallel(metric_fc)
 
 	optimizer = optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}], lr=0.01,
 									weight_decay=5e-4)
 	scheduler = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
 
-	for i in range(opt.max_epoch):
-		if i == 3:
+	for epoch_num in range(opt.max_epoch):
+		if epoch_num == 3:
 			model.set_gr(True)
 			optimizer = optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}], lr=0.01,
 									weight_decay=5e-4)
@@ -111,4 +110,4 @@ if __name__ == '__main__':
 		scheduler.step(res)
 		print('Shed step {}'.format(res))
 		
-		model.save(os.path.join(cf.PATH_TO_MODEL, 'general_v7_{:}_{:}_{:2f}.h5'.format(opt.bottleneck_size, epoch_num, res)))
+		model.save(os.path.join(opt.path_to_model, 'general_v7_{:}_{:}_{:2f}.h5'.format(opt.bottleneck_size, epoch_num, res)))

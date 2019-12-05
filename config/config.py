@@ -12,25 +12,11 @@ class Config(object):
 	display = False
 	finetune = False
 	
-	#train_root = '/data/Datasets/webface/CASIA-maxpy-clean-crop-144/'
-	train_list = '/data/Datasets/webface/train_data_13938.txt'
-	val_list = '/data/Datasets/webface/val_data_13938.txt'
-
-	#test_root = '/data1/Datasets/anti-spoofing/test/data_align_256'
-	#test_list = 'test.txt'
-
-	#lfw_root = '/data/Datasets/lfw/lfw-align-128'
-	#lfw_test_list = '/data/Datasets/lfw/lfw_test_pair.txt'
-
-	checkpoints_path = 'checkpoints'
-	load_model_path = 'models/resnet18.pth'
-	test_model_path = 'checkpoints/resnet18_110.pth'
+	path_to_model = 'checkpoints'
 	save_interval = 10
 
 	train_batch_size = 8  # batch size
 	test_batch_size = 60
-
-	#input_shape = (1, 224, 224)
 
 	optimizer = 'sgd'
 
