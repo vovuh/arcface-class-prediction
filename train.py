@@ -12,9 +12,6 @@ import torch
 import numpy as np
 import random
 import time
-from torch.nn import DataParallel
-from torch.optim.lr_scheduler import StepLR
-from torchvision import transforms
 import torch.optim.lr_scheduler as scheduler
 from sklearn.model_selection import train_test_split
 
@@ -92,14 +89,14 @@ if __name__ == '__main__':
 
 	optimizer = optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}], lr=0.01,
 									weight_decay=5e-4)
-	scheduler = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
+	sched = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
 
 	for epoch_num in range(opt.max_epoch):
 		if epoch_num == 3:
 			model.set_gr(True)
 			optimizer = optim.Adam([{'params': model.parameters()}, {'params': metric_fc.parameters()}], lr=0.01,
 									weight_decay=5e-4)
-			scheduler = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
+			sched = scheduler.ReduceLROnPlateau(optimizer, patience=1, factor=0.3, verbose=True, threshold=1e-2)
 
 
 		trainloader = DataLoader(train_dataset, batch_size = opt.train_batch_size, shuffle = True, num_workers = opt.num_workers)
@@ -107,7 +104,7 @@ if __name__ == '__main__':
 		
 		train(device, model, trainloader, optimizer, metric_fc, criterion)
 		res = validate(device, model, valloader, metric_fc, criterion)
-		scheduler.step(res)
+		sched.step(res)
 		print('Shed step {}'.format(res))
 		
 		model.save(os.path.join(opt.path_to_model, 'general_v7_{:}_{:}_{:2f}.h5'.format(opt.bottleneck_size, epoch_num, res)))
