@@ -7,7 +7,6 @@ import torch.optim as optim
 from torch.utils import data
 import torch.nn.functional as F
 import torchvision
-from utils import visualizer, view_model
 import torch
 import numpy as np
 import random
