@@ -1,8 +1,6 @@
 import pretrainedmodels as pm
 from pretrainedmodels.models.senet import SEResNeXtBottleneck
 import torch.nn as nn
-from torch.nn import Parameter
-import math
 import torch
 import torch.nn.functional as F
 

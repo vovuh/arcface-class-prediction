@@ -1,5 +1,3 @@
-import os
-
 import torch
 from tqdm import tqdm
 import numpy as np
@@ -48,7 +46,4 @@ def main(model_path, output_file_path):
 
 
 if __name__ == '__main__':
-    # this line required for using more than 1 worker in dataloader
-    # os.system(f"sudo mount -o remount,size=80G /dev/shm")
-	
     main(model_path='checkpoints/general_v7_128_32_7.183936.h5', output_file_path='test_vectors.npy')

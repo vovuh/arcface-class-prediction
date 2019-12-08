@@ -28,7 +28,3 @@ class resizeAndTensor(object):
 
 	def __call__(self, sample):
 		return self.my_transforms(sample)
-
-"""
-dataset = lamp_dataset(create_data.read_data(), transform = resizeAndTensor((224, 224)))
-"""

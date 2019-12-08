@@ -4,13 +4,7 @@ from torch.utils.data import DataLoader
 import torch
 from tqdm import tqdm
 import torch.optim as optim
-from torch.utils import data
-import torch.nn.functional as F
-import torchvision
 import torch
-import numpy as np
-import random
-import time
 import torch.optim.lr_scheduler as scheduler
 from sklearn.model_selection import train_test_split
 
