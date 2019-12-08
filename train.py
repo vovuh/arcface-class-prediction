@@ -74,15 +74,14 @@ if __name__ == '__main__':
 	val_dataset = lamp_dataset(val_data, transform = resizeAndTensor((224, 224)), mode = 'val')
 	
 	opt = Config()
-	if opt.display: visualizer = Visualizer()
-	device = torch.device('cuda')
+	device = opt.train_device
 	
 	criterion = torch.nn.CrossEntropyLoss()
 
 	model = ReSimpleModel(bottleneck_size=opt.bottleneck_size)
 	model.set_gr(False)
 	
-	metric_fc = ArcMarginProduct(opt.bottleneck_size, opt.num_classes, s=30, m=0.7, easy_margin=True) # first arg =64 ? 
+	metric_fc = ArcMarginProduct(opt.bottleneck_size, opt.num_classes, s=30, m=0.7, easy_margin=True)
 	
 	model.to(device)
 	metric_fc.to(device)

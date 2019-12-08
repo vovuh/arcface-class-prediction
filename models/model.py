@@ -15,7 +15,7 @@ class ReSimpleModel(nn.Module):
         self.bn512 = nn.BatchNorm1d(bottleneck_size)
 
         model_settings = pm.pretrained_settings['se_resnext50_32x4d']['imagenet']
-        _, self.input_height, input_width = model_settings['input_size']
+        _, self.input_height, self.input_width = model_settings['input_size']
 
     def set_gr(self, rg):
         for l in [self.se_resnext50_32x4d.layer0,
