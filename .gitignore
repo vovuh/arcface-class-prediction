@@ -1,3 +1,5 @@
 **__pycache__
 /dataset/*
 /checkpoints/*
+test_vectors.npy
+data_paths.txt
