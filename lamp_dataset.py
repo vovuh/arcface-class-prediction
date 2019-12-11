@@ -1,4 +1,3 @@
-import os, numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms

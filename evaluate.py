@@ -27,11 +27,11 @@ def main(model_path, output_file_path):
     model.load_state_dict(torch.load(model_path))
     model.train(False)
 
-    img_size = (model.input_height, model.input_width)
+    #img_size = (model.input_height, model.input_width)
 
     test_data = read_test_data()
     with open('data_paths.txt', 'w') as f:
-    	f.writelines(["%s\n" % item  for item in test_data])
+    	f.writelines(['%s\n' % item for item in test_data])
     
     test_dl = get_test_data_loader()
 
