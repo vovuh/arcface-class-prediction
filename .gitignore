@@ -1,5 +1,7 @@
 **__pycache__
 /dataset/*
+/dataset_backup/*
 /checkpoints/*
 test_vectors.npy
 data_paths.txt
+.idea/
