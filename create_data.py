@@ -9,13 +9,15 @@ def read_data():
     for cpath, dirs, files in os.walk(path):
         for file in files:
             file_class = cpath.split('\\')[-1]
-            if not file_class in classes:
+            if not (file_class in classes):
                 idx = len(classes)
                 classes[file_class] = idx
     names = []
     labels = []
     for cpath, dirs, files in os.walk(path):
         for file in files:
+            if os.path.splitext(file)[1] == '.txt':
+                continue
             names.append(os.path.join(cpath, file))
             labels.append(classes[cpath.split('\\')[-1]])
     data = {'imgpath': names, 'class': labels}
