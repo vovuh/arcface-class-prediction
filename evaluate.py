@@ -1,15 +1,13 @@
-import torch
-from tqdm import tqdm
 import numpy as np
+import torch
 from torch.utils.data import DataLoader
-
-from models.model import ReSimpleModel
-
-from config.config import Config
-
-from lamp_dataset import lamp_dataset, resizeAndTensor
+from tqdm import tqdm
 
 import create_data
+from config.config import Config
+from lamp_dataset import lamp_dataset, resizeAndTensor
+from models.model import ReSimpleModel
+
 
 def read_test_data():
     testing_data = create_data.read_data()
@@ -18,10 +16,10 @@ def read_test_data():
 
 
 def get_test_data_loader():
-	dataset = lamp_dataset(create_data.read_data(), transform = resizeAndTensor((224, 224)))
-	return DataLoader(dataset, batch_size = Config.test_batch_size, shuffle = False, num_workers = Config.num_workers)
+    dataset = lamp_dataset(create_data.read_data(), transform=resizeAndTensor((224, 224)))
+    return DataLoader(dataset, batch_size=Config.test_batch_size, shuffle=False, num_workers=Config.num_workers)
 
-    
+
 def main(model_path, output_file_path):
     model = ReSimpleModel(bottleneck_size=Config.bottleneck_size).to(Config.train_device)
     model.load_state_dict(torch.load(model_path))
@@ -29,8 +27,8 @@ def main(model_path, output_file_path):
 
     test_data = read_test_data()
     with open('data_paths.txt', 'w') as f:
-    	f.writelines(['%s\n' % item for item in test_data])
-    
+        f.writelines(['%s\n' % item for item in test_data])
+
     test_dl = get_test_data_loader()
 
     image_vectors = []

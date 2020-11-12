@@ -1,6 +1,6 @@
 import os
-import time
 import shutil
+import time
 from multiprocessing.dummy import Pool as ThreadPool
 from urllib.parse import urljoin
 

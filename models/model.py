@@ -1,8 +1,9 @@
 import pretrainedmodels as pm
-from pretrainedmodels.models.senet import SEResNeXtBottleneck
-import torch.nn as nn
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
+from pretrainedmodels.models.senet import SEResNeXtBottleneck
+
 
 class ReSimpleModel(nn.Module):
     def __init__(self, bottleneck_size=256):
