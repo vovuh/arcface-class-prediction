@@ -16,9 +16,10 @@ def read_data():
     labels = []
     for cpath, dirs, files in os.walk(path):
         for file in files:
-            if os.path.splitext(file)[1] == '.txt':
+            if file.endswith(".txt"):
                 continue
             names.append(os.path.join(cpath, file))
             labels.append(classes[cpath.split('\\')[-1]])
     data = {'imgpath': names, 'class': labels}
+    print(len(names), len(labels))
     return pd.DataFrame(data)
