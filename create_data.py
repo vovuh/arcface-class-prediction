@@ -21,5 +21,5 @@ def read_data():
             names.append(os.path.join(cpath, file))
             labels.append(classes[cpath.split('\\')[-1]])
     data = {'imgpath': names, 'class': labels}
-    print(len(names), len(labels))
+    print("The number of classes is %d " % len(names))
     return pd.DataFrame(data)
