@@ -3,7 +3,7 @@ import torch
 
 class Config(object):
     bottleneck_size = 128
-    num_classes = 9223
+    num_classes = 110475
 
     path_to_model = 'checkpoints'
 
