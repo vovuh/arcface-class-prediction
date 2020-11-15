@@ -42,4 +42,4 @@ def main(model_path, output_file_path):
 
 
 if __name__ == '__main__':
-    main(model_path='checkpoints/general_v7_128_32_7.183936.h5', output_file_path='test_vectors.npy')
+    main(model_path='checkpoints/general_v7_128_36_9.462475.h5', output_file_path='test_vectors.npy')
