@@ -11,7 +11,7 @@ from models.model import ReSimpleModel
 
 def read_test_data():
     testing_data = create_data.read_data()
-    testing_image_paths = testing_data['imgpath'].tolist()
+    testing_image_paths = testing_data["imgpath"].tolist()
     return testing_image_paths
 
 
@@ -26,8 +26,8 @@ def main(model_path, output_file_path):
     model.train(False)
 
     test_data = read_test_data()
-    with open('data_paths.txt', 'w') as f:
-        f.writelines(['%s\n' % item for item in test_data])
+    with open("data_paths.txt", "w") as f:
+        f.writelines(["%s\n" % item for item in test_data])
 
     test_dl = get_test_data_loader()
 
@@ -41,5 +41,5 @@ def main(model_path, output_file_path):
     np.save(output_file_path, np.concatenate(image_vectors, axis=0))
 
 
-if __name__ == '__main__':
-    main(model_path='checkpoints/general_v7_128_36_9.462475.h5', output_file_path='test_vectors.npy')
+if __name__ == "__main__":
+    main(model_path="checkpoints/general_v7_128_36_9.462475.h5", output_file_path="test_vectors.npy")
