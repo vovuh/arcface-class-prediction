@@ -31,9 +31,9 @@ def imshow(inp, title=None):
     plt.pause(0.001)  # pause a bit so that plots are updated
 
 
-def train_model(model, criterion, optimizer, scheduler, dataloaders, num_epochs=25):
+def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num_epochs=25):
     since = time.time()
-
+    print(device)
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
@@ -100,7 +100,7 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders, num_epochs=
     return model
 
 
-def visualize_model(model, dataloaders, num_images=6):
+def visualize_model(model, dataloaders, device, num_images=6):
     was_training = model.training
     model.eval()
     images_so_far = 0
@@ -129,7 +129,7 @@ def visualize_model(model, dataloaders, num_images=6):
 
 if __name__ == "__main__":
     plt.ion()
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     data_transforms = {
         'train': transforms.Compose([
@@ -173,5 +173,5 @@ if __name__ == "__main__":
         # Decay LR by a factor of 0.1 every 7 epochs
         exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
-        model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, data_loaders)
-        visualize_model(model_ft, data_loaders)
+        model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, data_loaders, device)
+        visualize_model(model_ft, data_loaders, device)
