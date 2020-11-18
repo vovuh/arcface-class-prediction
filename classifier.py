@@ -33,7 +33,7 @@ def imshow(inp, title=None):
 
 def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num_epochs=25):
     since = time.time()
-    print(device)
+
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
@@ -56,7 +56,6 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
-                # zero the parameter gradients
                 optimizer.zero_grad()
 
                 # forward
@@ -159,9 +158,9 @@ if __name__ == "__main__":
 
         model_ft = models.resnet18(pretrained=True)
         num_ftrs = model_ft.fc.in_features
-        # Here the size of each output sample is set to 2.
-        # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
-        model_ft.fc = nn.Linear(num_ftrs, 2)
+
+        # The second parameter is the number of different classes
+        model_ft.fc = nn.Linear(num_ftrs, len(set(class_names)))
 
         model_ft = model_ft.to(device)
 

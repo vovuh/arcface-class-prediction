@@ -13,7 +13,7 @@ def get_property_value(path, property_name):
             pos = prop_names.index(property_name)
             property_value = prop_values[pos].split(", ")
             if len(property_value) == 1:
-                return property_value[0]
+                return property_value[0].replace(",", "")
             else:
                 return None
     except:
@@ -52,5 +52,5 @@ def read_data(property_name=None):
             else:
                 labels.append(classes[get_property_value(cpath, property_name)])
     data = {"imgpath": names, "class": labels}
-    print("The number of classes is %d " % len(names))
+    print("The number of samples is %d and the number of classes is %d" % (len(names), len(classes)))
     return pd.DataFrame(data)
