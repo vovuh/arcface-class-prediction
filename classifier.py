@@ -130,3 +130,6 @@ if __name__ == "__main__":
         exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
         model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, data_loaders, device)
+        torch.save(model_ft.state_dict(), "classifier_models/" +
+                   ("style_classifier.pth" if property_name == "Стиль" else "range_classifier.pth")
+                   )

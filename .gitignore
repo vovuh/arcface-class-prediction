@@ -5,3 +5,4 @@
 test_vectors.npy
 data_paths.txt
 .idea/
+/classifier_models/*
