@@ -40,6 +40,7 @@ def read_data(property_name=None):
                 add_file_class(file_class)
     names = []
     labels = []
+    classes_count = {}
     for cpath, dirs, files in os.walk(path):
         if property_name is None or get_property_value(cpath, property_name) is None:
             continue
@@ -50,7 +51,23 @@ def read_data(property_name=None):
             if property_name is None:
                 labels.append(classes[cpath.split('\\')[-1]])
             else:
-                labels.append(classes[get_property_value(cpath, property_name)])
-    data = {"imgpath": names, "class": labels}
-    print("The number of samples is %d and the number of classes is %d" % (len(names), len(classes)))
+                label = classes[get_property_value(cpath, property_name)]
+                labels.append(label)
+                if label in classes_count:
+                    classes_count[label] += 1
+                else:
+                    classes_count[label] = 1
+    final_classes = {}
+    for current_class in classes_count.keys():
+        if classes_count[current_class] >= 150:
+            index = len(final_classes)
+            final_classes[current_class] = index
+    final_names = []
+    final_labels = []
+    for i in range(len(names)):
+        if labels[i] in final_classes:
+            final_names.append(names[i])
+            final_labels.append(final_classes[labels[i]])
+    data = {"imgpath": final_names, "class": final_labels}
+    print("The number of samples is %d and the number of classes is %d" % (len(final_names), len(final_classes)))
     return pd.DataFrame(data)
