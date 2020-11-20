@@ -37,7 +37,7 @@ def epxand_vectors(model, test_dl, image_vectors):
         data_input = data_input.to(Config.train_device)
         with torch.set_grad_enabled(False):
             feature = model(data_input)
-            np.append(image_vectors[index], feature.cpu().detach().numpy())
+            image_vectors[index] = np.append(image_vectors[index], feature.cpu().detach().numpy())
             index += 1
     return image_vectors
 
