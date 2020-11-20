@@ -37,8 +37,10 @@ def epxand_vectors(model, test_dl, image_vectors):
         data_input = data_input.to(Config.train_device)
         with torch.set_grad_enabled(False):
             feature = model(data_input)
-            image_vectors[index] = np.append(image_vectors[index], feature.cpu().detach().numpy())
-            index += 1
+            numpy_feature = feature.cpu().detach().numpy()
+            for i in range(len(numpy_feature)):
+                image_vectors[index] = np.append(image_vectors[index], numpy_feature[i])
+                index += 1
     return image_vectors
 
 
@@ -84,4 +86,4 @@ if __name__ == "__main__":
     vectors = load_classifier(model_path="classifier_models/style_classifier.pth",
                               image_vectors=vectors,
                               property_name="Стиль")
-    np.save("test_vectors.npy", np.concatenate(vectors, axis=0))
+    np.save("test_vectors.npy", vectors)

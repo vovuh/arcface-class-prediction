@@ -6,7 +6,7 @@ if __name__ == "__main__":
     vectors = np.load("test_vectors.npy")
     paths = [line.strip() for line in open("data_paths.txt").readlines()]
 
-    indices = np.random.permutation(len(paths))[:10]
+    indices = np.random.permutation(len(paths))[:5]
     for i in indices:
         values = []
         for j in range(len(vectors)):
