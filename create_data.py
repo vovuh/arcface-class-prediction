@@ -42,24 +42,25 @@ def read_data(property_name=None):
     labels = []
     classes_count = {}
     for cpath, dirs, files in os.walk(path):
-        if property_name is None or get_property_value(cpath, property_name) is None:
+        if not (property_name is None) and get_property_value(cpath, property_name) is None:
             continue
         for file in files:
             if file.endswith(".txt"):
                 continue
             names.append(os.path.join(cpath, file))
             if property_name is None:
-                labels.append(classes[cpath.split('\\')[-1]])
+                label = classes[cpath.split('\\')[-1]]
+                labels.append(label)
             else:
                 label = classes[get_property_value(cpath, property_name)]
                 labels.append(label)
-                if label in classes_count:
-                    classes_count[label] += 1
-                else:
-                    classes_count[label] = 1
+            if label in classes_count:
+                classes_count[label] += 1
+            else:
+                classes_count[label] = 1
     final_classes = {}
     for current_class in classes_count.keys():
-        if classes_count[current_class] >= 150:
+        if property_name is None or classes_count[current_class] >= 150:
             index = len(final_classes)
             final_classes[current_class] = index
     final_names = []

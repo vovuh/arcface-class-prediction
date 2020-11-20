@@ -5,8 +5,19 @@ from tqdm import tqdm
 
 import create_data
 from config.config import Config
-from lamp_dataset import lamp_dataset, resizeAndTensor
+from lamp_dataset import lamp_dataset
 from models.model import ReSimpleModel
+from torchvision import models, transforms
+import torch.nn as nn
+
+
+def get_num_classes(property_name):
+    dataset = lamp_dataset(create_data.read_data(property_name),
+                           transform=transforms.Compose([
+                               transforms.Resize((224, 224)),
+                               transforms.ToTensor(),
+                           ]))
+    return len(set(dataset.classes))
 
 
 def read_test_data():
@@ -15,12 +26,27 @@ def read_test_data():
     return testing_image_paths
 
 
-def get_test_data_loader():
-    dataset = lamp_dataset(create_data.read_data(), transform=resizeAndTensor((224, 224)))
+def get_test_data_loader(transform):
+    dataset = lamp_dataset(create_data.read_data(), transform=transform)
     return DataLoader(dataset, batch_size=Config.test_batch_size, shuffle=False, num_workers=Config.num_workers)
 
 
-def main(model_path, output_file_path):
+def epxand_vectors(model, test_dl, image_vectors):
+    index = 0
+    for data_input, label in tqdm(test_dl):
+        data_input = data_input.to(Config.train_device)
+        with torch.set_grad_enabled(False):
+            feature = model(data_input)
+            np.append(image_vectors[index], feature.cpu().detach().numpy())
+            index += 1
+    return image_vectors
+
+
+def load_arcface(model_path):
+    test_dl = get_test_data_loader(transform=transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+    ]))
     model = ReSimpleModel(bottleneck_size=Config.bottleneck_size).to(Config.train_device)
     model.load_state_dict(torch.load(model_path))
     model.train(False)
@@ -29,17 +55,33 @@ def main(model_path, output_file_path):
     with open("data_paths.txt", "w") as f:
         f.writelines(["%s\n" % item for item in test_data])
 
-    test_dl = get_test_data_loader()
+    image_vectors = [np.empty(0) for _ in range(len(test_data))]
+    return epxand_vectors(model, test_dl, image_vectors)
 
-    image_vectors = []
-    for data_input, label in tqdm(test_dl):
-        data_input = data_input.to(Config.train_device)
-        with torch.set_grad_enabled(False):
-            feature = model(data_input)
-            image_vectors.append(feature.cpu().detach().numpy())
 
-    np.save(output_file_path, np.concatenate(image_vectors, axis=0))
+def load_classifier(model_path, image_vectors, property_name):
+    test_dl = get_test_data_loader(transform=transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ]))
+    model = models.resnet18(pretrained=True).to(Config.train_device)
+    num_ftrs = model.fc.in_features
+    classes = get_num_classes(property_name)
+    model.fc = nn.Linear(num_ftrs, classes).to(Config.train_device)
+    model.load_state_dict(torch.load(model_path))
+    model.train(False)
+
+    return epxand_vectors(model, test_dl, image_vectors)
 
 
 if __name__ == "__main__":
-    main(model_path="checkpoints/general_v7_128_36_9.462475.h5", output_file_path="test_vectors.npy")
+    vectors = load_arcface(model_path="checkpoints/general_v7_128_36_9.462475.h5")
+    vectors = load_classifier(model_path="classifier_models/range_classifier.pth",
+                              image_vectors=vectors,
+                              property_name="Рекомендуемая площадь освещения")
+    vectors = load_classifier(model_path="classifier_models/style_classifier.pth",
+                              image_vectors=vectors,
+                              property_name="Стиль")
+    np.save("test_vectors.npy", np.concatenate(vectors, axis=0))
